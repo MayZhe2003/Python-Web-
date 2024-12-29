@@ -55,6 +55,37 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# 修改主页面布局
+st.title("📊 网页文本分析工具")
+st.markdown("---")
+
+# 美化侧边栏
+with st.sidebar:
+    st.image("https://cdn-icons-png.flaticon.com/512/1998/1998664.png", width=100)  # 添加一个图标
+    st.header("🛠️ 配置选项")
+    st.markdown("---")
+    
+    graph_type = st.selectbox(
+        "📈 选择可视化图表",
+        ["词云图", "柱状图", "饼图", "折线图", "漏斗图", "散点图", "雷达图"]
+    )
+    
+    st.markdown("---")
+    st.markdown("### 📝 使用说明")
+    st.markdown("""
+    1. 输入完整的网址（包含http://或https://）
+    2. 选择想要的可视化图表类型
+    3. 等待分析结果显示
+    """)
+
+# 美化URL输入区域
+st.markdown("### 🌐 输入网页地址")
+url = st.text_input(
+    "",  # 移除默认标签
+    placeholder="请输入要分析的网页URL...",
+    help="输入完整的网址，包含http://或https://"
+)
+
 @st.cache_data
 def get_text_from_url(url):
     """获取网页文本内容"""
@@ -217,37 +248,6 @@ def draw_radar_chart(word_counts):
     )
     return radar
 
-# 修改主页面布局
-st.title("📊 网页文本分析工具")
-st.markdown("---")
-
-# 美化侧边栏
-with st.sidebar:
-    st.image("https://cdn-icons-png.flaticon.com/512/1998/1998664.png", width=100)  # 添加一个图标
-    st.header("🛠️ 配置选项")
-    st.markdown("---")
-    
-    graph_type = st.selectbox(
-        "📈 选择可视化图表",
-        ["词云图", "柱状图", "饼图", "折线图", "漏斗图", "散点图", "雷达图"]
-    )
-    
-    st.markdown("---")
-    st.markdown("### 📝 使用说明")
-    st.markdown("""
-    1. 输入完整的网址（包含http://或https://）
-    2. 选择想要的可视化图表类型
-    3. 等待分析结果显示
-    """)
-
-# 美化URL输入区域
-st.markdown("### 🌐 输入网页地址")
-url = st.text_input(
-    "",  # 移除默认标签
-    placeholder="请输入要分析的网页URL...",
-    help="输入完整的网址，包含http://或https://"
-)
-
 if url:
     # 添加进度条
     progress_bar = st.progress(0)
@@ -260,38 +260,18 @@ if url:
             progress_bar.progress(100)
             
             if word_counts:
-                st.markdown("---")
-                st.subheader("📊 基础统计信息")
-                
-                # 美化统计指标显示
-                cols = st.columns(3)
-                with cols[0]:
-                    st.metric("📚 总词数", f"{len(word_counts):,}")
-                with cols[1]:
-                    st.metric("🔤 独立词数", f"{len(set(word_counts)):,}")
-                with cols[2]:
-                    st.metric("🏆 最高词频", f"{max(word_counts.values()):,}")
+                # 显示基础统计信息
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.metric("总词数", len(word_counts))  # 这里显示的总词数应该是一致的
+                with col2:
+                    st.metric("独立词数", len(set(word_counts)))
+                with col3:
+                    st.metric("最高词频", max(word_counts.values()))
 
-                st.markdown("---")
-                st.subheader("🏅 词频排行（Top 3）")
-                
-                # 美化表格显示
-                df = pd.DataFrame(word_counts.most_common(3), columns=["词语", "频次"])
-                st.dataframe(
-                    df.style.background_gradient(cmap='Blues'),
-                    use_container_width=True
-                )
-
-                st.markdown("---")
-                st.subheader(f"📈 {graph_type}可视化")
-                
-                # 添加图表说明
-                with st.expander("📖 图表说明"):
-                    st.markdown(f"""
-                    - 当前显示: **{graph_type}**
-                    - 数据范围: 根据图表类型显示top N个词频
-                    - 可交互: 鼠标悬停可查看详细数据
-                    """)
+                # 显示词频排行榜
+                st.subheader("词频排行（Top 3）")
+                st.table(pd.DataFrame(word_counts.most_common(3), columns=["词语", "频次"]))
 
                 # 根据用户选择显示对应图表
                 chart_functions = {
