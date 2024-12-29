@@ -313,7 +313,8 @@ if url:
 st.markdown("---")
 st.markdown("""
 <div style='text-align: center; color: #666;'>
-    <p>Made with ❤️ by Your Name</p>
+    <p>Made with ❤️ by 马宇哲</p>
     <p>版本 1.0.0 | © 2024 All Rights Reserved</p>
+    <p>马宇哲公司 版权所有</p>
 </div>
 """, unsafe_allow_html=True)
