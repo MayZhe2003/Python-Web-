@@ -17,6 +17,44 @@ STOP_WORDS = set([
     '看', '好', '自己', '这', '年', '做', '来', '后'
 ])
 
+# 在文件顶部添加自定义CSS样式
+st.markdown("""
+<style>
+    .main {
+        padding: 2rem;
+    }
+    .stTitle {
+        font-size: 3rem !important;
+        color: #2c3e50;
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+    .stSubheader {
+        color: #34495e;
+        font-size: 1.5rem !important;
+    }
+    .stMetric {
+        background-color: #f8f9fa;
+        padding: 1rem;
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .css-1d391kg {  /* 修改侧边栏样式 */
+        background-color: #f1f3f6;
+        padding: 2rem 1rem;
+    }
+    .stButton>button {
+        width: 100%;
+        border-radius: 5px;
+        background-color: #3498db;
+        color: white;
+    }
+    .stTextInput>div>div>input {
+        border-radius: 5px;
+    }
+</style>
+""", unsafe_allow_html=True)
+
 @st.cache_data
 def get_text_from_url(url):
     """获取网页文本内容"""
@@ -179,41 +217,81 @@ def draw_radar_chart(word_counts):
     )
     return radar
 
-# 设置页面标题
+# 修改主页面布局
 st.title("📊 网页文本分析工具")
+st.markdown("---")
 
-# 创建侧边栏选项
+# 美化侧边栏
 with st.sidebar:
-    st.header("配置选项")
+    st.image("https://cdn-icons-png.flaticon.com/512/1998/1998664.png", width=100)  # 添加一个图标
+    st.header("🛠️ 配置选项")
+    st.markdown("---")
+    
     graph_type = st.selectbox(
-        "选择可视化图表",
+        "📈 选择可视化图表",
         ["词云图", "柱状图", "饼图", "折线图", "漏斗图", "散点图", "雷达图"]
     )
+    
+    st.markdown("---")
+    st.markdown("### 📝 使用说明")
+    st.markdown("""
+    1. 输入完整的网址（包含http://或https://）
+    2. 选择想要的可视化图表类型
+    3. 等待分析结果显示
+    """)
 
-# 创建URL输入框
-url = st.text_input("请输入要分析的网页URL:", help="输入完整的网址，包含http://或https://")
+# 美化URL输入区域
+st.markdown("### 🌐 输入网页地址")
+url = st.text_input(
+    "",  # 移除默认标签
+    placeholder="请输入要分析的网页URL...",
+    help="输入完整的网址，包含http://或https://"
+)
 
 if url:
-    with st.spinner('正在获取和分析网页内容...'):
-        # 获取网页内容
+    # 添加进度条
+    progress_bar = st.progress(0)
+    with st.spinner('🚀 正在获取和分析网页内容...'):
         text = get_text_from_url(url)
+        progress_bar.progress(50)
+        
         if text:
-            
-            # 进行词频统计
             word_counts = word_frequency(text)
+            progress_bar.progress(100)
+            
             if word_counts:
-                # 显示基础统计信息
-                col1, col2, col3 = st.columns(3)
-                with col1:
-                    st.metric("总词数", len(word_counts))  # 这里显示的总词数应该是一致的
-                with col2:
-                    st.metric("独立词数", len(set(word_counts)))
-                with col3:
-                    st.metric("最高词频", max(word_counts.values()))
+                st.markdown("---")
+                st.subheader("📊 基础统计信息")
+                
+                # 美化统计指标显示
+                cols = st.columns(3)
+                with cols[0]:
+                    st.metric("📚 总词数", f"{len(word_counts):,}")
+                with cols[1]:
+                    st.metric("🔤 独立词数", f"{len(set(word_counts)):,}")
+                with cols[2]:
+                    st.metric("🏆 最高词频", f"{max(word_counts.values()):,}")
 
-                # 显示词频排行榜
-                st.subheader("词频排行（Top 3）")
-                st.table(pd.DataFrame(word_counts.most_common(3), columns=["词语", "频次"]))
+                st.markdown("---")
+                st.subheader("🏅 词频排行（Top 3）")
+                
+                # 美化表格显示
+                df = pd.DataFrame(word_counts.most_common(3), columns=["词语", "频次"])
+                st.dataframe(
+                    df.style.background_gradient(cmap='Blues'),
+                    use_container_width=True
+                )
+
+                st.markdown("---")
+                st.subheader(f"📈 {graph_type}可视化")
+                
+                # 添加图表说明
+                with st.expander("📖 图表说明"):
+                    st.markdown(f"""
+                    - 当前显示: **{graph_type}**
+                    - 数据范围: 根据图表类型显示top N个词频
+                    - 可交互: 鼠标悬停可查看详细数据
+                    """)
 
                 # 根据用户选择显示对应图表
                 chart_functions = {
@@ -234,5 +312,28 @@ if url:
                         height=600,
                         scrolling=True
                     )
+                
+                # 添加下载功能
+                st.markdown("---")
+                st.subheader("📥 数据下载")
+                df_download = pd.DataFrame(word_counts.most_common(), columns=["词语", "频次"])
+                st.download_button(
+                    label="下载完整词频数据 (CSV)",
+                    data=df_download.to_csv(index=False).encode('utf-8'),
+                    file_name='word_frequency.csv',
+                    mime='text/csv'
+                )
             else:
-                st.write("没有词频数据，请检查输入。")
+                st.error("⚠️ 没有词频数据，请检查输入。")
+        
+        # 清除进度条
+        progress_bar.empty()
+
+# 添加页脚
+st.markdown("---")
+st.markdown("""
+<div style='text-align: center; color: #666;'>
+    <p>Made with ❤️ by Your Name</p>
+    <p>版本 1.0.0 | © 2024 All Rights Reserved</p>
+</div>
+""", unsafe_allow_html=True)
