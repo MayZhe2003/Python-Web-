@@ -198,38 +198,41 @@ if url:
         # 获取网页内容
         text = get_text_from_url(url)
         if text:
+            
             # 进行词频统计
             word_counts = word_frequency(text)
-            
-            # 显示基础统计信息
-            col1, col2, col3 = st.columns(3)
-            with col1:
-                st.metric("总词数", len(word_counts))  # 这里显示的总词数应该是一致的
-            with col2:
-                st.metric("独立词数", len(set(word_counts)))
-            with col3:
-                st.metric("最高词频", max(word_counts.values()))
-            
-            # 显示词频排行榜
-            st.subheader("词频排行（Top 3）")
-            st.table(pd.DataFrame(word_counts.most_common(3), columns=["词语", "频次"]))
-            
-            # 根据用户选择显示对应图表
-            chart_functions = {
-                "词云图": draw_wordcloud,
-                "柱状图": draw_bar_chart,
-                "饼图": draw_pie_chart,
-                "折线图": draw_line_chart,
-                "漏斗图": draw_funnel_chart,
-                "散点图": draw_scatter_chart,
-                "雷达图": draw_radar_chart
-            }
-            
-            # 绘制选中的图表
-            if graph_type in chart_functions:
-                chart = chart_functions[graph_type](word_counts)
-                st.components.v1.html(
-                    chart.render_embed(),
-                    height=600,
-                    scrolling=True
-                )
+            if word_counts:
+                # 显示基础统计信息
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.metric("总词数", len(word_counts))  # 这里显示的总词数应该是一致的
+                with col2:
+                    st.metric("独立词数", len(set(word_counts)))
+                with col3:
+                    st.metric("最高词频", max(word_counts.values()))
+
+                # 显示词频排行榜
+                st.subheader("词频排行（Top 3）")
+                st.table(pd.DataFrame(word_counts.most_common(3), columns=["词语", "频次"]))
+
+                # 根据用户选择显示对应图表
+                chart_functions = {
+                    "词云图": draw_wordcloud,
+                    "柱状图": draw_bar_chart,
+                    "饼图": draw_pie_chart,
+                    "折线图": draw_line_chart,
+                    "漏斗图": draw_funnel_chart,
+                    "散点图": draw_scatter_chart,
+                    "雷达图": draw_radar_chart
+                }
+
+                # 绘制选中的图表
+                if graph_type in chart_functions:
+                    chart = chart_functions[graph_type](word_counts)
+                    st.components.v1.html(
+                        chart.render_embed(),
+                        height=600,
+                        scrolling=True
+                    )
+            else:
+                t.write("没有词频数据，请检查输入。")
