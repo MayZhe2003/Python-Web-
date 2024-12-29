@@ -235,4 +235,4 @@ if url:
                         scrolling=True
                     )
             else:
-                t.write("没有词频数据，请检查输入。")
+                st.write("没有词频数据，请检查输入。")
